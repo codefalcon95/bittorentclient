@@ -24,9 +24,10 @@ fn decode_bencoded_value(encoded_value: &str) -> serde_json::Value {
 fn main() {
     let args: Vec<String> = env::args().collect();
     let command = &args[1];
-    println!("Logs from your program will appear here!");
 
     if command == "decode" {
+     println!("Logs from your program will appear here!");
+
         // You can use print statements as follows for debugging, they'll be visible when running tests.
         let encoded_value = &args[2];
         let decoded_value = decode_bencoded_value(encoded_value);
