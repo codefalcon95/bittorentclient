@@ -16,8 +16,11 @@ fn decode_bencoded_value(encoded_value: &str) -> serde_json::Value {
         return serde_json::Value::String(encoded_value.to_string());
     }
 
-    let splitted_encoded_string: Vec<&str> = encoded_value.split(':').collect();
-    return serde_json::Value::String(splitted_encoded_string[1].to_string());
+    let splitted_encoded_string: (&str, &str) = match encoded_value.split_once(':') {
+        Some(splitted_encoded_string) => splitted_encoded_string,
+        None => return serde_json::Value::String(encoded_value.to_string())
+    };
+    return serde_json::Value::String(splitted_encoded_string.1.to_string());
 }
 
 // Usage: your_bittorrent.sh decode "<encoded_value>"
@@ -70,8 +73,8 @@ mod tests {
 
     #[test]
     fn test_decode_bencoded_value() {
-        let encoded_string = "4:spam";
+        let encoded_string = "55:http://bittorrent-test-tracker.codecrafters.io";
         let decoded_value = decode_bencoded_value(encoded_string);
-        assert_eq!(serde_json::Value::String("spam".to_string()), decoded_value);
+        assert_eq!(serde_json::Value::String("http://bittorrent-test-tracker.codecrafters.io".to_string()), decoded_value);
     }
 }
