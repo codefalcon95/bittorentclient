@@ -69,7 +69,7 @@ fn encoded_string_is_bencoded_integer(encoded_string: &str) -> bool {
 
     // get ndex of first and last character
     let character_limit = encoded_string.chars().count() - 1;
-    let is_index_string_digit =  match &encoded_string[1..character_limit].parse::<i32>() {
+    let is_index_string_digit =  match &encoded_string[1..character_limit].parse::<i64>() {
         Ok(_) => true,
         Err(_) => false
     };
