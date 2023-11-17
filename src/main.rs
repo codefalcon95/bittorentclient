@@ -1,26 +1,22 @@
 use serde_json;
-use std::env;
+use std::{env, usize};
 
 // Available if you need it!
 // use serde_bencode
 
+enum BencodeType {
+    Integer,
+    String,
+}
+
 #[allow(dead_code)]
 fn decode_bencoded_value(encoded_value: &str) -> serde_json::Value {
-    // If encoded_value starts with a digit, it's a number
-    // we want to confirm if the first character of a string is number
-    let is_first_char_digit = match encoded_value.chars().next() {
-        Some(c) => c.is_digit(10),
-        None => false
-    };
-    if !is_first_char_digit {
-        return serde_json::Value::String(encoded_value.to_string());
+    
+    let bencode_type = encoded_string_type(encoded_value);
+    match bencode_type {
+        BencodeType::Integer => decode_bencoded_integer(encoded_value),
+        BencodeType::String => decode_bencoded_string(encoded_value),
     }
-
-    let splitted_encoded_string: (&str, &str) = match encoded_value.split_once(':') {
-        Some(splitted_encoded_string) => splitted_encoded_string,
-        None => return serde_json::Value::String(encoded_value.to_string())
-    };
-    return serde_json::Value::String(splitted_encoded_string.1.to_string());
 }
 
 // Usage: your_bittorrent.sh decode "<encoded_value>"
@@ -37,6 +33,61 @@ fn main() {
     } else {
         println!("unknown command: {}", args[1])
     }
+}
+
+fn encoded_string_type(encoded_string: &str) -> BencodeType {
+      let is_bencoded_integer = encoded_string_is_bencoded_integer(encoded_string);
+      if is_bencoded_integer {
+          return BencodeType::Integer;
+      }
+      let is_bencoded_string = encoded_string_is_bencoded_string(encoded_string);
+      if is_bencoded_string {
+          return BencodeType::String;
+      }
+      return BencodeType::String;
+  
+}
+
+fn encoded_string_is_bencoded_string(encoded_string: &str) -> bool {
+    let is_first_char_digit = match encoded_string.chars().next() {
+        Some(c) => c.is_digit(10),
+        None => false
+    };
+    return is_first_char_digit;
+}
+
+fn encoded_string_is_bencoded_integer(encoded_string: &str) -> bool {
+    let is_first_char_digit = match encoded_string.chars().next() {
+        Some(c) =>c == 'i',
+        None => false
+    };
+
+    let is_last_char_letter_e = match encoded_string.chars().last() {
+        Some(c) => c == 'e',
+        None => false
+    };
+
+    // get ndex of first and last character
+    let character_limit = encoded_string.chars().count() - 1;
+    let is_index_string_digit =  match &encoded_string[1..character_limit].parse::<i32>() {
+        Ok(_) => true,
+        Err(_) => false
+    };
+
+    return is_first_char_digit && is_last_char_letter_e && is_index_string_digit;
+}
+
+fn decode_bencoded_string(encoded_string: &str) -> serde_json::Value {
+    let splitted_encoded_string: (&str, &str) = match encoded_string.split_once(':') {
+        Some(splitted_encoded_string) => splitted_encoded_string,
+        None => return serde_json::Value::String(encoded_string.to_string())
+    };
+    return serde_json::Value::String(splitted_encoded_string.1.to_string());
+}
+
+fn decode_bencoded_integer(encoded_string: &str) -> serde_json::Value {
+    let encoded_integer = encoded_string[1..(encoded_string.len() - 1)].parse::<i64>().unwrap();
+    return serde_json::Value::Number(serde_json::Number::from(encoded_integer));
 }
 
 #[allow(dead_code)]
