@@ -6,10 +6,10 @@
 #
 # DON'T EDIT THIS!
 [package]
-name = "bittorrent-starter-rust"
+name = "bittorrent-client"
 version = "0.1.0"
-authors = ["Codecrafters <hello@codecrafters.io>"]
-edition = "2021"
+authors = ["sanni moshood"]
+edition = "2023"
 
 # DON'T EDIT THIS!
 #
