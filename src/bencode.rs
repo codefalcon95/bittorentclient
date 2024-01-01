@@ -69,63 +69,29 @@ impl Bencode {
     }
 
     pub fn decode_list(&self, encoded_string: &str) -> serde_json::Value {
-        let mut splitted_encoded_string: &str = &encoded_string[1..];
-        let mut previous_char = ' ';
-        let mut index: usize = 0;
-        let mut chars: Vec<char> = splitted_encoded_string.chars().collect();
+        let mut splitted_encoded_string = &encoded_string[1..];
         let mut list = Vec::new();
 
-        while index < chars.len() {
-            // che
-            if chars[index] == ':' && previous_char.is_digit(10) {
-                 // 
-                let (string_length_, split_string_by_column)= splitted_encoded_string.split_once(':').unwrap();
-                // cant character to the front
-                let string_length = string_length_.to_string().parse::<usize>().unwrap();
-                let string_slice: &str = &split_string_by_column[0..string_length];
-            
-                let (_, remainder_string) =
-                    splitted_encoded_string.split_once(string_slice).unwrap();
-                splitted_encoded_string = remainder_string;
-                chars = splitted_encoded_string.chars().collect();
-                list.push(string_slice);
-                index = 0;
-                continue;
-            }
-
-            if previous_char == 'i' && chars[index].is_digit(10) {
-                // scan forward to find e
-                let mut i_index = 1;
-                let integer_find_string: &str = &splitted_encoded_string[index..];
-                let inner_char: Vec<char> = integer_find_string.chars().collect();
-
-                while i_index < inner_char.len() {
-                    if inner_char[i_index] == 'e' {
-                        let string_slice = &splitted_encoded_string[index..(index + i_index)];
-                        let (_, remainder_string) =
-                        splitted_encoded_string.split_once((string_slice.to_string() +"e").as_str()).unwrap();
-                        splitted_encoded_string = remainder_string;
-                        chars = splitted_encoded_string.chars().collect();
-                        list.push(string_slice);
-                        index = 0;
-                        break;
-                    }
-                    // check for e
-                    if !inner_char[i_index].is_digit(10) {
-                        break;
-                    }
-
-                    i_index += 1;
+        while !splitted_encoded_string.is_empty() {
+            if splitted_encoded_string.starts_with('i') {
+                if let Some((int_str, rest)) = splitted_encoded_string[1..].split_once('e') {
+                    list.push(serde_json::Value::Number(int_str.parse::<i64>().unwrap().into()));
+                    splitted_encoded_string = rest;
+                } else {
+                    break;
                 }
             }
-
-            if chars.len() > 0 {
-                previous_char = chars[index];
-                index += 1;
+            else if let Some((length_str, rest)) = splitted_encoded_string.split_once(':') {
+                let string_length = length_str.parse::<usize>().unwrap();
+                let (string_slice, remainder_string) = rest.split_at(string_length);
+                list.push(serde_json::Value::String(string_slice.to_string()));
+                splitted_encoded_string = remainder_string;
+            }else {
+                break;
             }
-           
         }
-       return serde_json::to_string(&list).unwrap().into();
+
+        serde_json::Value::Array(list)
     }
 }
 
@@ -155,7 +121,6 @@ mod tests {
         let encoded_string = "l5:helloi76e10:lifeisgood6:worldyi153e";
         let bencode = Bencode::new();
         let resp = bencode.decode_list(encoded_string);
-        println!("{:?}", resp);
-        assert!(true);
+        assert_eq!(serde_json::json!(["hello", 76, "lifeisgood", "worldy", 153]), resp);
     }
 }
