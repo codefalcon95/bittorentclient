@@ -1,4 +1,5 @@
 mod bencode;
+mod helper;
 
 use bencode::Bencode;
 use serde_json;
