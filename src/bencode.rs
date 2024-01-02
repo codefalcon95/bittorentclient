@@ -15,6 +15,7 @@ impl Bencode {
     }
 
     #[allow(dead_code)]
+    /// Decode a bencode string into a json string
     pub fn decode(&self, encoded_value: &str) -> serde_json::Value {
         let bencode_type: BencodeType = self.encoded_string_type(encoded_value);
         match bencode_type {
@@ -24,7 +25,8 @@ impl Bencode {
             _ => serde_json::Value::String(encoded_value.to_string()),
         }
     }
-
+    
+    /// get encoded string type
     fn encoded_string_type(&self, encoded_string: &str) -> BencodeType {
         if self.is_encoded_integer(encoded_string) {
             return BencodeType::Integer;
@@ -38,17 +40,19 @@ impl Bencode {
         return BencodeType::String;
     }
 
+    /// check if encoded string is type string
     fn is_encoded_string(&self, encoded_string: &str) -> bool {
         let re = Regex::new(r"^\d+:[a-zA-Z]+$").unwrap();
         return re.is_match(encoded_string);
     }
 
+    /// check if encoded string is type integer
     fn is_encoded_integer(&self, encoded_string: &str) -> bool {
         let re = Regex::new(r"^i\d+e$").unwrap();
         return re.is_match(encoded_string);
     }
 
-
+    /// decode encoded string as a string
     fn decode_string(&self, encoded_string: &str) -> serde_json::Value {
         match encoded_string.split_once(':') {
             Some((_, splitted_encoded_string)) => serde_json::Value::String(splitted_encoded_string.to_string()),
@@ -56,6 +60,7 @@ impl Bencode {
         }
     }
 
+    /// decode encoded string as an integer
     fn decode_integer(&self, encoded_string: &str) -> serde_json::Value {
         let encoded_integer = &encoded_string[1..(encoded_string.len() - 1)];
         let parsed_integer = encoded_integer.parse::<i64>()
@@ -63,11 +68,13 @@ impl Bencode {
         return serde_json::Value::Number(serde_json::Number::from(parsed_integer));
     }
 
+    /// check if encoded string is type list
     pub fn is_encoded_list(&self, encoded_string: &str) -> bool {
         let re = Regex::new(r"^l.*e$").unwrap();
         return re.is_match(encoded_string);
     }
 
+    /// decode encoded string as a list
     pub fn decode_list(&self, encoded_string: &str) -> serde_json::Value {
         let mut splitted_encoded_string = &encoded_string[1..];
         let mut list = Vec::new();
